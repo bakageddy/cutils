@@ -63,7 +63,24 @@ void test_string_concat_view() {
 	for (int i = 0; i < 10; i++) {
 		string_append(&str, 'a' + i);
 	}
-	// string_view_t view = str
+	string_view_t view = string_slice(&str, 0, 5).opt;
+	assert(string_concat_view(&str, view) == NONE);
+	assert(string_concat_view(&str, (string_view_t){}) == INVALID_ARG);
+	printf(string_fmt "\n", string_arg(str));
+	printf(string_fmt "\n", string_arg(view));
+	string_free(&str);
+	count++;
+}
+
+void test_string_static(void) {
+	string_t str = {};
+	char data[] = "Hello, I am Dinesh!\n";
+
+	assert(string_static(&str, (char*) data, sizeof(data)) == NONE);
+	assert(str.len == 21);
+	assert(str.cap == 21);
+	printf(string_fmt "\n", string_arg(str));
+
 	string_free(&str);
 	count++;
 }
@@ -73,6 +90,7 @@ int main(void) {
 	test_string_append();
 	test_string_slice();
 	test_string_concat_view();
+	test_string_static();
 	INFO("%d test(s) ran successfully\n", count);
 	return 0;
 }

@@ -33,6 +33,11 @@ typedef struct {
 
 typedef struct {
 	err_code tag;
+	string_t opt;
+} optstring_t;
+
+typedef struct {
+	err_code tag;
 	string_view_t opt;
 } optstring_view_t;
 
@@ -40,6 +45,8 @@ typedef struct {
 #define string_arg(x) (x).len, (x).data
 
 err_code string_init(string_t *str);
+err_code string_reserve(string_t *str, uint32_t ncap);
+err_code string_static(string_t *str, const char *data, const int len);
 err_code string_append(string_t *str, char c);
 err_code string_concat(string_t *dst, const string_t src);
 err_code string_concat_view(string_t *dst, const string_view_t src);
@@ -51,6 +58,7 @@ void string_free(string_t *str);
 
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 
 err_code string_init(string_t *str) {
 	if (str == NULL) return INVALID_ARG;
@@ -58,6 +66,24 @@ err_code string_init(string_t *str) {
 	if (str -> data == NULL) return OUT_OF_MEMORY;
 	str -> len = 0;
 	str -> cap = CUTIL_STRING_INITIAL_CAPACITY;
+	return NONE;
+}
+
+err_code string_static(string_t *str, const char *data, const int len) {
+	if (str == NULL || data == NULL) return INVALID_ARG;
+	err_code res = string_reserve(str, len);
+	if (res != NONE) return res;
+	memcpy(str -> data, data, len);
+	str -> len = len;
+	return NONE;
+}
+
+err_code string_reserve(string_t *str, uint32_t ncap) {
+	if (str == NULL) return INVALID_ARG;
+	char *temp = (char *) realloc(str -> data, ncap);
+	if (temp == NULL) return OUT_OF_MEMORY;
+	str -> data = temp;
+	str -> cap = ncap;
 	return NONE;
 }
 
@@ -77,7 +103,7 @@ err_code string_append(string_t *str, const char c) {
 		if (res != NONE) return res;
 	}
 	str -> data[str -> len] = c;
-	str -> len += 1; //  NOTE: Don't make it confusing by using ++
+	str -> len++;
 	return NONE;
 }
 
